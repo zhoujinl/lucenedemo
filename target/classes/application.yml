@@ -1,0 +1,33 @@
+server: 
+  servlet:
+    context-path: /lucenedemo
+    session:
+      timeout: 1440m
+spring:
+  datasource:
+    username: root
+    password: root
+    url: jdbc:mysql://127.0.0.1:3306/lucene_demo?connectTimeout=10000&socketTimeout=10000&serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowMultiQueries=true&zeroDateTimeBehavior=convertToNull
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    #spring官方推荐 性能最强，没有之一
+    hikari:
+      pool-name: Retail_HikariCP
+      minimum-idle: 5 #最小空闲连接数量
+      idle-timeout: 180000 #空闲连接存活最大时间，默认600000（10分钟）
+      maximum-pool-size: 10 #连接池最大连接数，默认是10
+      auto-commit: true  #此属性控制从池返回的连接的默认自动提交行为,默认值：true
+      max-lifetime: 1800000 #此属性控制池中连接的最长生命周期，值0表示无限生命周期，默认1800000即30分钟
+      connection-timeout: 30000 #数据库连接超时时间,默认30秒，即30000
+      connection-test-query: SELECT 1
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+mybatis:
+  config-location: classpath:sqlmapper/mybatis-config.xml
+  mapper-locations: classpath:sqlmapper/*Mapper.xml
+#是否显示swagger
+swagger:
+  enabled: true
+
+lucene:
+  indexLibrary: D:/lucenedemo/indexLibrary

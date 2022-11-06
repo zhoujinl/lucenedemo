@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="lucenedemo.dao.IArticleDao">
+
+    <!--添加-->
+    <insert id="add" parameterType="lucenedemo.entity.ArticleEntity" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into `article`
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                id,
+            </if>
+            <if test="title != null">
+                title,
+            </if>
+            <if test="content != null">
+                content,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id},
+            </if>
+            <if test="title != null">
+                #{title},
+            </if>
+            <if test="content != null">
+                #{content},
+            </if>
+        </trim>
+    </insert>
+
+    <!--删除-->
+    <delete id="delete" parameterType="lucenedemo.entity.ArticleEntity">
+        delete from `article`
+        <where>
+            <if test="id != null">
+                and id=#{id}
+            </if>
+            <if test="id == null">
+                and 1 = 0
+            </if>
+        </where>
+    </delete>
+
+    <!--更新-->
+    <update id="update" parameterType="lucenedemo.entity.ArticleEntity">
+        update `article`
+        <trim prefix="set" suffixOverrides=",">
+            <if test="id != null">
+                id=#{id},
+            </if>
+            <if test="title != null">
+                title=#{title},
+            </if>
+            <if test="content != null">
+                content=#{content},
+            </if>
+        </trim>
+        <where>
+            <if test="id != null">
+                and id=#{id}
+            </if>
+            <if test="id == null">
+                and 1 = 0
+            </if>
+        </where>
+    </update>
+
+    <!--固定条件查询-->
+    <select id="select" parameterType="lucenedemo.entity.ArticleEntity"
+            resultType="lucenedemo.entity.ArticleEntity">
+        select
+        id as "id",
+        title as "title",
+        content as "content"
+        from `article`
+        <where>
+            <if test="id != null">
+                and id=#{id}
+            </if>
+            <if test="title != null">
+                and title=#{title}
+            </if>
+            <if test="content != null">
+                and content=#{content}
+            </if>
+        </where>
+        <if test="orderStr != '' and orderStr != null">
+            order by ${orderStr}
+        </if>
+        <if test="start != null and pageSize != null">
+            limit #{start},#{pageSize}
+        </if>
+
+
+    </select>
+
+    <!--分页（模糊查询的公共条件）-->
+    <sql id="likeSelectConditions">
+        <if test="id != null and id != '' ">
+            and id <![CDATA[=]]> #{id}
+        </if>
+        <if test="title != null and title != '' ">
+            and title <![CDATA[=]]> #{title}
+        </if>
+        <if test="content != null and content != '' ">
+            and content <![CDATA[=]]> #{content}
+        </if>
+    </sql>
+
+    <!--分页（模糊）查询-->
+    <select id="likeSelect" parameterType="lucenedemo.entity.ArticleEntity"
+            resultType="lucenedemo.entity.ArticleEntity">
+        select
+        id as "id",
+        title as "title",
+        content as "content"
+
+        from `article`
+
+        <where>
+            <include refid="likeSelectConditions"/>
+        </where>
+
+        <if test="orderStr != '' and orderStr != null">
+            order by ${orderStr}
+        </if>
+        <if test="start != null and pageSize != null">
+            limit #{start},#{pageSize}
+        </if>
+
+
+    </select>
+
+    <!--分页（模糊）查询条数-->
+    <select id="likeSelectCount" parameterType="lucenedemo.entity.ArticleEntity"
+            resultType="java.lang.Long">
+        select
+        count(1)
+        from `article`
+
+        <where>
+            <include refid="likeSelectConditions"/>
+        </where>
+    </select>
+
+</mapper>

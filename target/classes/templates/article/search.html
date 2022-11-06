@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>lucenedemo</title>
+    <link rel="stylesheet" th:href="@{/mystatic/bootstrap/css/bootstrap.min-custom.css}">
+    <link rel="stylesheet" th:href="@{/mystatic/bootstrap/css/bootstrap-table.css}">
+    <link rel="stylesheet" th:href="@{/mystatic/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css}">
+    <link rel="stylesheet" th:href="@{/mystatic/multiselect/css/bootstrap-multiselect.css}">
+    <link rel="stylesheet" th:href="@{/mystatic/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/mystatic/css/ui.css}">
+    <link rel="stylesheet" th:href="@{/mystatic/css/ui2.css}">
+    <link rel="stylesheet" th:href="@{/mystatic/progressbar/css/mprogress.css}">
+    <link rel="stylesheet" th:href="@{/mystatic/progressbar/css/style.css}">
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script th:src="@{/mystatic/html5shiv/html5shiv.min.js}"></script>
+    <script th:src="@{/mystatic/respond/respond.min.js}"></script>
+    <![endif]-->
+    <style>
+        /* 外面盒子样式---自己定义 */
+        .page_div {
+            margin: 20px 10px 20px 0;
+            color: #666
+        }
+
+        /* 页数按钮样式 */
+        .page_div button {
+            display: inline-block;
+            min-width: 30px;
+            height: 28px;
+            cursor: pointer;
+            color: #666;
+            font-size: 13px;
+            line-height: 28px;
+            background-color: #f9f9f9;
+            border: 1px solid #dce0e0;
+            text-align: center;
+            margin: 0 4px;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        #firstPage, #lastPage, #nextPage, #prePage {
+            width: 50px;
+            color: #0073A9;
+            border: 1px solid #0073A9
+        }
+
+        #nextPage, #prePage {
+            width: 70px
+        }
+
+        .page_div .current {
+            background-color: #0073A9;
+            border-color: #0073A9;
+            color: #FFF
+        }
+
+        /* 页面数量 */
+        .totalPages {
+            margin: 0 10px
+        }
+
+        .totalPages span, .totalSize span {
+            color: #0073A9;
+            margin: 0 5px
+        }
+
+        /*button禁用*/
+        .page_div button:disabled {
+            opacity: .5;
+            cursor: no-drop
+        }
+    </style>
+</head>
+
+<body class="admin-body toggle-nav fs">
+<div class="container-fluid">
+    <div class="row" style="padding-left: 0">
+        <div class="main" style="padding-top: 0">
+            <div class="container-fluid">
+                <div class="admin-new-box ui-admin-content">
+                    <!--后台正文区域-->
+                    <div class="ui-panel">
+                        <div class="ui-title-bar">
+                            <div class="ui-title">article管理模块</div>
+                        </div>
+                        <!-- Tab panes -->
+                        <div class="tab-content">
+                            <div role="tabpanel" class="tab-pane active" id="uiTab01">
+                                <!-- 查询区域 -->
+                                <div>
+                                    <input type="text" id="content-query" placeholder="请输入关键字查询" style="margin-top: 10px"/>&nbsp;
+                                    <button type="button" class="btn btn-primary btn-sm" onclick="queryInfo()">查询</button>&nbsp;
+                                    <!--<button type="button" class="btn btn-primary btn-sm" onclick="exportExcel()">导出excel</button>-->
+                                </div>
+                                <!-- 查询区域 end-->
+                                <!-- 添加数据区域 -->
+                                <div style="text-align: right;">
+                                    <button type="button" class="btn btn-success btn-sm" onclick="addMsg()" style="margin: 8px">添加数据</button>
+                                </div>
+                                <!-- 查询结果表格显示区域 -->
+                                <div id="dataTable">
+
+
+                                </div>
+                                <div id="pageID" class="page_div"></div>
+                                <!-- 查询结果表格显示区域 end-->
+                            </div>
+                        </div>
+                    </div>
+                    <!--后台正文区域结束-->
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 修改模态框 -->
+<div class="modal fade" id="updateModal" tabindex="-1" role="dialog" aria-labelledby="updateModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="updateModalLabel">修改信息</h4>
+            </div>
+            <div class="modal-body" id="updateModalBody">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="confirmUp()">确认</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 添加模态框 -->
+<div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="addModalLabel">添加信息</h4>
+            </div>
+            <div class="modal-body" id="addModalBody">
+                <form>
+                    <div class="form-group">
+                        <label for="id-insert" class="control-label">id:</label>
+                        <input type="text" class="form-control" id="id-insert"/>
+                    </div>
+                    <div class="form-group">
+                        <label for="title-insert" class="control-label">title:</label>
+                        <input type="text" class="form-control" id="title-insert"/>
+                    </div>
+                    <div class="form-group">
+                        <label for="content-insert" class="control-label">content:</label>
+                        <input type="text" class="form-control" id="content-insert"/>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="confirmAdd()">确认</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- 修改内容模板  -->
+<script id="updateTemplate" type="text/html">
+    <form>
+        <div class="form-group">
+            <label for="id-attr" class="control-label">id:</label>
+            <input type="text" class="form-control" id="id-attr" value="{{id}}"/>
+        </div>
+        <div class="form-group">
+            <label for="title-attr" class="control-label">title:</label>
+            <input type="text" class="form-control" id="title-attr" value="{{title}}"/>
+        </div>
+        <div class="form-group">
+            <label for="content-attr" class="control-label">content:</label>
+            <input type="text" class="form-control" id="content-attr" value="{{content}}"/>
+        </div>
+        <div class="form-group">
+            <input type="hidden" class="form-control" id="id-attr" value="{{id}}"/>
+        </div>
+    </form>
+</script>
+
+<!-- 表格内容模板  -->
+<script id="tableContentTemplate" type="text/html">
+    {{#result}}
+    <!--使用&防止转义-->
+    <h4>{{&title}}</h4>
+    <button type="button" class="btn btn-info btn-sm" onclick="upMsg('{{id}}','/article/select')">更新</button>&nbsp;
+    <button type="button" class="btn btn-danger btn-sm" onclick="delMsg('{{id}}','/article/delete',this)">删除</button>&nbsp;<br/><br/>
+    <p>{{&content}}</p>
+    <br/>
+    {{/result}}
+</script>
+
+<script th:src="@{/mystatic/jquery/jquery.min.js}"></script>
+<script th:src="@{/mystatic/js/pageMe.js}"></script>
+<script th:src="@{/mystatic/bootstrap/js/bootstrap.min.js}"></script>
+<script th:src="@{/mystatic/bootstrap/js/bootstrap-table.js}"></script>
+<script th:src="@{/mystatic/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js}"></script>
+<script th:src="@{/mystatic/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js}"></script>
+<script th:src="@{/mystatic/multiselect/js/bootstrap-multiselect.js}"></script>
+<script th:src="@{/mystatic/js/admin.js}"></script>
+<script th:src="@{/mystatic/js/ajaxFactory.js}"></script>
+<script th:src="@{/mystatic/js/crudFactory.js}"></script>
+<script th:src="@{/mystatic/js/jqAlert.js}"></script>
+<script th:src="@{/mystatic/echarts/echarts.min.js}"></script>
+<!-- 进度条  -->
+<script th:src="@{/mystatic/progressbar/js/mprogress.js}"></script>
+<script th:src="@{/mystatic/progressbar/js/init-mprogress.js}"></script>
+<script th:src="@{/mystatic/js/mustache/mustache.min.js}"></script>
+<script th:src="@{/mystatic/js/config.js}"></script>
+
+<script>
+
+    var currentPage = 1;
+    var totalPage;
+    var sqlMap = {};
+    var controllerPrefix = "article";
+    var methodName = "full-text-search";
+
+    $(function () {
+
+        queryInfo();
+
+    });
+
+    function fullTextSearch() {
+
+        sqlMap.currentPage = currentPage;
+
+        $.ajax({
+            url: basePath + "/" + controllerPrefix + "/" + methodName,
+            type: "get",
+            data: sqlMap,
+            success: function (data) {
+                $z.dealCommonResult(data, function () {
+                    data = data.data;
+                    if (data.result.length === 0) {
+                        $.MsgBox.Alert("提示", "没有您想要查询的数据！");
+                        MprogressEnd();
+                        $('#dataTable').empty();
+                        $("#pageID").empty();
+                        return;
+                    }
+
+                    currentPage = data.currentPage;
+                    totalPage = data.totalPage;
+                    $("#pageID").empty();
+                    // pageMe.js 使用方法
+                    $("#pageID").paging({
+                        pageNum: currentPage, // 当前页面
+                        totalNum: totalPage, // 总页码
+                        totalList: data.count, // 记录总数量
+                        callback: function (num) { // 回调函数
+                            currentPage = num;
+                            fullTextSearch();
+                        }
+                    });
+
+                    var bodyHtmlTemplate = $("#tableContentTemplate").html();
+                    Mustache.parse(bodyHtmlTemplate); // 预编译模板
+
+                    makeResult(data.result);
+
+                    var bodyHtml = Mustache.render(bodyHtmlTemplate, data);
+                    console.log(bodyHtml);
+                    $('#dataTable').html(bodyHtml);
+
+                });
+            },
+            complete: function (XMLHttpRequest) {
+            },
+            error: function (data, status, e) {
+                $.MsgBox.Alert("错误", data.responseJSON.msg);
+            }
+        });
+    }
+
+    function queryInfo() {
+        sqlMap = {};
+        //每页查10条
+        sqlMap.limit = 10;
+        sqlMap.keyWord = $("#content-query").val();
+        if (sqlMap.keyWord === '') {
+            $.MsgBox.Alert("提示", "请输入查询内容查询！");
+            return;
+        }
+        currentPage = 1;
+        fullTextSearch();
+    }
+
+    function delMsg(id, path, thisVal) {
+
+        $.MsgBox.Confirm("温馨提示", "执行删除后将无法恢复，确定继续吗？", function () {
+            $z.ajaxStrAndJson({
+                url: basePath + path,
+                data: {
+                    id: id
+                },
+                success: function (data) {
+                    $z.dealCommonResult(data, function () {
+                        fullTextSearch();
+                        $.MsgBox.Alert("提示", "删除成功！");
+                    });
+                }
+            });
+        });
+
+    }
+
+    function upMsg(id, path) {
+
+        $z.ajaxStrAndJson({
+            url: basePath + path,
+            data: {
+                id: id
+            },
+            success: function (data) {
+                $z.dealCommonResult(data, function () {
+                    data = data.data;
+                    // 把数据动态写入模态框
+                    var bodyHtmlTemplate = $("#updateTemplate").html();
+                    Mustache.parse(bodyHtmlTemplate); // 预编译模板
+                    var bodyHtml = Mustache.render(bodyHtmlTemplate, data[0]);
+                    $('#updateModalBody').html(bodyHtml);
+
+                    makeUpMsg(data[0]);
+
+                    $('#updateModal').modal('show');
+                });
+
+            }
+        });
+    }
+
+    function confirmUp() {
+        $z.ajaxStrAndJson({
+            url: basePath + "/" + controllerPrefix + "/update",
+            data: {
+                id: $("#id-attr").val(),
+                title: $("#title-attr").val(),
+                content: $("#content-attr").val()
+            },
+            success: function (data) {
+                $z.dealCommonResult(data, function () {
+                    $.MsgBox.Alert("提示", "更新成功！");
+                    $('#updateModal').modal('hide');
+                    fullTextSearch();
+                });
+            }
+        });
+    }
+
+
+    function addMsg() {
+        $('#addModal').modal('show');
+    }
+
+    function confirmAdd() {
+        $z.ajaxStrAndJson({
+            url: basePath + "/" + controllerPrefix + "/add",
+            data: {
+                id: $("#id-insert").val(),
+                title: $("#title-insert").val(),
+                content: $("#content-insert").val()
+            },
+            success: function (data) {
+                $z.dealCommonResult(data, function () {
+                    $.MsgBox.Alert("提示", "添加成功！");
+                    $('#addModal').modal('hide');
+                    //初始化
+                    sqlMap = {};
+                    currentPage = 1;
+                    fullTextSearch();
+                });
+            }
+        });
+    }
+
+    function makeResult(data) {
+        for (var i = 0; i < data.length; i++) {
+            if (data[i] == null) {
+                data[i] = {};
+                data[i]["id"] = "无";
+                data[i]["title"] = "无";
+                data[i]["content"] = "无";
+            }
+        }
+    }
+
+    function makeUpMsg(data) {
+    }
+</script>
+</body>
+
+</html>
+
+
+

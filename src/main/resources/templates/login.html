@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <title>登录</title>
+  
+  <link rel="stylesheet" th:href="@{/mystatic/bootstrap/css/bootstrap.min-custom.css}">
+  <link rel="stylesheet" th:href="@{/mystatic/css/style.css}">
+  <script>if(window.top !== window.self){ window.top.location = window.location;}</script>
+  
+</head>
+
+<body>
+
+    <div class="wrapper" id="loginModel">
+		<form class="form-signin">
+			<h2 class="form-signin-heading">请登录</h2>
+			<input type="text" class="form-control" 
+				placeholder="用户名" required="" autofocus="" id='userName'/> <input
+				type="password" class="form-control" 
+				placeholder="密码" required="" id='password'/> <input type="checkbox"
+				value="remember-me" id="rememberMe">
+			记住我<br /> <br />
+			<button class="btn btn-lg btn-primary btn-block" type="button" id="loginBT">登录</button>
+		</form>
+	</div>
+  
+<script th:src="@{/mystatic/jquery/jquery.min.js}"></script>
+<script th:src="@{/mystatic/js/jqAlert.js}"></script>
+<script th:src="@{/mystatic/js/ajaxFactory.js}"></script>
+<script th:src="@{/mystatic/js/config.js}"></script>
+
+<script>
+
+	var user = localStorage.getItem("user");
+
+	if (user != null && user != undefined) {
+        try {
+            user = JSON.parse(user);
+            $("#userName").val(user.userName);
+            $("#password").val(user.password);
+        } catch(err){}
+	} 
+
+	$("#loginBT").on("click",function() {
+		
+		$z.ajaxStrAndJson({
+			url : basePath + "/login/doLogin",
+			data : {
+				userName : $("#userName").val(),
+				password : $("#password").val()
+			},
+			success : function(data) {
+				$z.dealCommonResult(data, function() {
+					var rememberMe = $("#rememberMe").prop("checked");
+					//如果点了记住我，则存储到本地
+					if (rememberMe) {
+	                    localStorage.setItem("user", JSON.stringify({
+	                        userName: $("#userName").val(),
+	                        password: $("#password").val()
+	                    }));
+					}
+					window.location.href = basePath + '/home';
+				});
+	
+			}
+		});
+		
+	
+	} );
+	
+</script>
+
+</body>
+
+</html>
+
+
+
+
+
